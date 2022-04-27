@@ -1,0 +1,125 @@
+###Clear the Global Environment
+rm(list=ls(all=TRUE))
+
+### Library Call
+library(forecast)
+library(lubridate)
+library(DataCombine)
+library(imputeTS)
+library(plyr)
+library(dplyr)
+library(TTR)
+library(graphics)
+library(data.table)
+library(Quandl)
+library(DMwR)
+
+# Set the working directory
+setwd("E:/Batch34/20170708_Batch29_CSE7302c_Time_Series_LabActivity05/")
+
+### Read Data that is stored in RData format
+data = readRDS("ecommerceData.RData")
+
+### Observe the data
+# * Find how many unique products
+# * What are all the columns given in the data
+names(data)
+
+##Summary
+summary(data$Condition)
+
+min(data$Date)
+max(data$Date)
+## Dimensions
+dim(data)
+## Unique
+length(unique(data$TitleKey))
+
+### Focusing on a particular product of choice
+# Since different products  price vary  in a different way along the year
+# we choose a particular product by key 4302628
+data2 = data[data$TitleKey == "4302628" & data$Condition == "Good",]
+
+### Basic info about that product
+dim(data2)
+head(data2)
+names(data2)
+str(data2)
+tail(data2)
+
+### Observation & Analysis 
+# * Look at the basic info of the data like names,str etc.,
+# * We observe that there is different price for the product at different times in   a day.
+# * We need to have  one data point per unit price so therefore we need to aggregate them by day
+# * R has read the data column either as character or as factor we need convert it to date format
+RtData2Day <- data2 %>% group_by(Date) %>% summarise("MIN_PRICE" = mean(Price))
+RtData2Day <- data.frame(RtData2Day)
+str(RtData2Day)
+
+# Converting the date column to appropriate date format
+RtData2Day$Date = as.Date(RtData2Day$Date,format="%Y-%m-%d")
+
+### Missing values in time series
+# * Some times there will be missing entries in dates which will create a missing day in the data or if it is quarter,month or annual .
+# * Observe the data to find if any
+head(RtData2Day)
+str(RtData2Day)
+
+sum(is.na(RtData2Day))
+
+### Detection of the missing values
+# * Create a date field which consists of continuous sequence of dates 
+# * Check against this with the current price data and find out the missing dates.
+# * Join this variable to the current data to see the missing dates
+minDate = min(as.Date(RtData2Day$Date,format="%Y-%m-%d"))
+maxDate = max(as.Date(RtData2Day$Date,format="%Y-%m-%d"))
+# Generating the sequence of dates from start date to end date
+seq <- data.frame("dateRange"=seq(minDate,maxDate,by="days"))
+
+# Mering the data frames
+RtData2Day2 <- seq %>% full_join(RtData2Day,c("dateRange" = "Date"))
+
+# Coverting to data frame
+RtData2Day <- data.frame(RtData2Day)
+RtData2Day2 <- RtData2Day2
+head(RtData2Day2)
+
+### Impuation of Missing Values
+# * Replace the missing values with the preceeding value or succeeding or both.
+# * To do that we can use na.locf of "zoo" package which will give succeding values
+# * we can use rev( ) to reverse the sequence and take the average of both
+# Library used for imputing data library(imputeTS)
+RtData2Day2$MIN_PRICE <- na.locf(RtData2Day2$MIN_PRICE)
+head(RtData2Day2)
+
+### Observation on MIN_PRICE
+# * The price is not changing daily very much 
+# * We need to see weekly aggregation instead of daily
+# * Adding week column in addition can help in this 
+# * use any of the following aggregations such as Min , Max or Average for the price
+
+# Getting the year from the date column and creating a new column YEAR
+RtData2Day2$YEAR <-as.numeric(format(RtData2Day2$dateRange,format="%Y"))
+# Getting the week from the date column and creating a new column WEEK
+RtData2Day2$WEEK <-as.numeric(format(RtData2Day2$dateRange,format="%W"))
+# Sorting the data in ascending order based on Year and Week
+RtData2Day2 <- RtData2Day2[order(RtData2Day2$YEAR,RtData2Day2$WEEK),]
+# Getting the avreage price of the book at week level
+RtData2Week <- RtData2Day2 %>% group_by(YEAR,WEEK) %>% summarise("MIN_PRICE" = mean(MIN_PRICE))
+# Coverting to data frame
+RtData2Week <- data.frame(RtData2Week)
+
+### Splitting of the Data into train and test
+# * Random split is not possible because here we will be in need of sequence where by we miss the data points
+# * splitting is done by sequential splitting
+Train <- RtData2Week[1:(nrow(RtData2Week) - 4),]
+Test <- RtData2Week[(nrow(RtData2Week) - 3):nrow(RtData2Week),]
+
+### converting into time series 
+ # our target variable is price and each week has a price aggregated
+Price <- ts(Train$MIN_PRICE, frequency =52)
+
+
+
+### Vizualize the time series Data
+plot(Price,type="l",lwd=3,col="red",xlab="week",ylab="Price",main="Time series plot for Book-xyzabc")

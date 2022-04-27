@@ -1,0 +1,10 @@
+rs	runs scored
+ra	runs average
+w	wins
+obp	on base percentage
+slg	sluggientageng perc
+ba	batting average
+g	
+oobp	
+oslg	
+	

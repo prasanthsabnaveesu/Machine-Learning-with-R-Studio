@@ -1,0 +1,26 @@
+# Data Desciption:
+#     Flight Data Set contains the following columns
+#     DEP_TIME    : Departure time in hhmm
+#     Carrier     : It has 8 levels
+#                       CO: Continental
+#                       DH: Atlantic Coast
+#                       DL: Delta
+#                       MQ: American Eagle
+#                       OH: Comair
+#                       RU: Continental Express
+#                       UA: United
+#                       US: US Airways
+#     Destination : The destination has 3 levels
+#                       JFK: John F Kennedy Airport in NEWYORK
+#                       LGA: LaGuardia Airport in NEWYORK 
+#                       EWR: Newark Airport in Newark 
+#     Origin      : The origin has has 3 levels
+#                       BWI: Baltimore-Washington International Airport 
+#                       DCA: Ronald Reagan Washington National Airport
+#                       IAD: Washington Dulles International Airport
+#     Weather     : The weather is a integer range between 0 & 1
+#     Day_Week    : Day of the week also a integer beween 1-7 indicating
+#                   the days from Sunday to Saturday
+#     Flight.Staus: The flight status indicated as a integer 0 or 1
+#                   0- Not Delayed  (Considering it as positive)
+#                   1- Delayed      (Considering it as negative)
